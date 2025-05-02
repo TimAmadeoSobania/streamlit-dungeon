@@ -232,7 +232,14 @@ def down_callback():
 
 @st.cache_data
 def fetch_data(level_name):
-    df = pd.read_csv(level_name, sep=",", header=None)
+    if 'csv' in level_name:
+        df = pd.read_csv(level_name, sep=",", header=None)
+    elif 'json' in level_name:
+        width = pd.read_json(f"graphics/{level_name}").layers[0]['chunks'][0]['width']
+        data = pd.read_json(f"graphics/{level_name}").layers[0]['chunks'][0]['data']
+        df = pd.DataFrame([data[x:x+width] for x in range(0, len(data), width)])
+    else:
+        raise ValueError("Unsupported file format when loading map. Please provide a CSV or JSON file.")
     return df
 
 # ---------------- game restart ----------------
@@ -264,7 +271,7 @@ local_css("style.css")
 # --------------- level config ------------------------
 
 
-current_level_name = "level2"
+current_level_name = "level3"
 
 if "level_data" not in st.session_state:
     level_config = game_config.level_config
@@ -341,30 +348,30 @@ chests = game_def.generate_chests_html(st.session_state["chests"])
 
 # ---------------- boxes ----------------
 
-if "boxes" not in st.session_state:
-    st.session_state["boxes"] = game_def.additional_layers_html(
-        current_level_name, "boxes"
-    )
+# if "boxes" not in st.session_state:
+#     st.session_state["boxes"] = game_def.additional_layers_html(
+#         current_level_name, "boxes"
+#     )
 
-boxes = st.session_state["boxes"]
+# boxes = st.session_state["boxes"]
 
-# ---------------- voids ----------------
+# # ---------------- voids ----------------
 
-if "voids" not in st.session_state:
-    st.session_state["voids"] = game_def.additional_layers_html(
-        current_level_name, "voids", "xyz"
-    )
+# if "voids" not in st.session_state:
+#     st.session_state["voids"] = game_def.additional_layers_html(
+#         current_level_name, "voids", "xyz"
+#     )
 
-voids = st.session_state["voids"]
+# voids = st.session_state["voids"]
 
-# ---------------- troches ----------------
+# # ---------------- troches ----------------
 
-if "torches" not in st.session_state:
-    st.session_state["torches"] = game_def.additional_layers_html(
-        current_level_name, "torches"
-    )
+# if "torches" not in st.session_state:
+#     st.session_state["torches"] = game_def.additional_layers_html(
+#         current_level_name, "torches"
+#     )
 
-torches = st.session_state["torches"]
+# torches = st.session_state["torches"]
 
 # ---------------- creating visual layers textboxes ----------------
 
@@ -384,6 +391,7 @@ text_boxes_html = game_def.get_text_boxes(
 df = fetch_data(st.session_state.level_data[current_level_name]["level_csv"])
 if "level" not in st.session_state:  # or st.session_state["level_change"]:
     st.session_state["level"] = df.values
+    
 
 
 # ---------------- END CONDITION ----------------
@@ -401,165 +409,169 @@ if (
 #
 # ------------------------------------------------------------
 
-tab1, tab2 = st.tabs(["intro", "start game"])
+#tab1, tab2 = st.tabs(["intro", "start game"])
 
 # ----------------- game start --------
 
-with tab1:
-    st.subheader("| Intro")
-    col1, col2 = st.columns(2, gap="small")
-    with col1:
-        # main_image
-        st.image("graphics/other/dungeon_crawler.png")
+# with tab1:
+#     st.subheader("| Intro")
+#     col1, col2 = st.columns(2, gap="small")
+#     with col1:
+#         # main_image
+#         st.image("graphics/other/dungeon_crawler.png")
 
-        st.caption(
-            "The Dungeon: a streamlit dungeon crawler game", unsafe_allow_html=True
-        )
-    with col2:
-        intro_text = """
-        Explore the depths of an ancient dungeon in the first streamlit-based dungeon crawler game!
-        Navigate through dangerous traps, defeat fearsome monsters and uncover the secrets of the DuNgeOn.
-        With intuitive controls and beautiful graphics, this game will keep you entertained for hours.
-        Experience the thrill of adventure as you progress through levels and uncover powerful treasures.
-        Join the adventure today and become the hero of the dungeon!
-        """
-        st.write(f'<p style="color:#9c9d9f">{intro_text}</p>', unsafe_allow_html=True)
-        audio_file = open("audio/intro.mp3", "rb")
-        audio_bytes = audio_file.read()
-        st.audio(audio_bytes, format="audio/mpeg")
+#         st.caption(
+#             "The Dungeon: a streamlit dungeon crawler game", unsafe_allow_html=True
+#         )
+#     with col2:
+#         intro_text = """
+#         Explore the depths of an ancient dungeon in the first streamlit-based dungeon crawler game!
+#         Navigate through dangerous traps, defeat fearsome monsters and uncover the secrets of the DuNgeOn.troches
+#         With intuitive controls and beautiful graphics, this game will keep you entertained for hours.
+#         Experience the thrill of adventure as you progress through levels and uncover powerful treasures.
+#         Join the adventure today and become the hero of the dungeon!
+#         """
+#         st.write(f'<p style="color:#9c9d9f">{intro_text}</p>', unsafe_allow_html=True)
+#         audio_file = open("audio/intro.mp3", "rb")
+#         audio_bytes = audio_file.read()
+#         st.audio(audio_bytes, format="audio/mpeg")
 
-    st.subheader("| Game start")
-    st.write(
-        '<p style="color:#9c9d9f">To start the game go to the "start game" tab. Please be sure to switch to <b>dark mode</b> or the custom theme. The Dungeon is meant to be played in the dark! </p>',
-        unsafe_allow_html=True,
-    )
-    st.subheader("| Controls")
-    st.write(
-        '<p style="color:#9c9d9f">Desktop: please use keyboard arrows | Mobile (Android, Chrome): please use on-screen buttons | iOS: unfortunately, the auto-scrolling feature does not work yet for iOS.</p>',
-        unsafe_allow_html=True,
-    )
-    st.subheader("| Github")
-    st.write(
-        '<p style="color:#9c9d9f">Create your own dungeon! Visit <a href="https://github.com/TomJohnH/streamlit-dungeon">GitHub</a>. Edit your levels with <a href="https://dungeon-editor.streamlit.app/">The Dungeon editor</a>.</p><br>',
-        unsafe_allow_html=True,
-    )
+#     st.subheader("| Game start")
+#     st.write(
+#         '<p style="color:#9c9d9f">To start the game go to the "start game" tab. Please be sure to switch to <b>dark mode</b> or the custom theme. The Dungeon is meant to be played in the dark! </p>',
+#         unsafe_allow_html=True,
+#     )
+#     st.subheader("| Controls")
+#     st.write(
+#         '<p style="color:#9c9d9f">Desktop: please use keyboard arrows | Mobile (Android, Chrome): please use on-screen buttons | iOS: unfortunately, the auto-scrolling feature does not work yet for iOS.</p>',
+#         unsafe_allow_html=True,
+#     )
+#     st.subheader("| Github")
+#     st.write(
+#         '<p style="color:#9c9d9f">Create your own dungeon! Visit <a href="https://github.com/TomJohnH/streamlit-dungeon">GitHub</a>. Edit your levels with <a href="https://dungeon-editor.streamlit.app/">The Dungeon editor</a>.</p><br>',
+#         unsafe_allow_html=True,
+#     )
 
 
-with tab2:
+#with tab2:
 
-    ####################################################
-    #
-    #            THIS PART RENDERS MAIN SCREEN
-    #
-    ####################################################
+####################################################
+#
+#            THIS PART RENDERS MAIN SCREEN
+#
+####################################################
 
-    html = game_def.level_renderer_optimized(
-        st.session_state["level"],
-        player + monsters + boxes + voids + torches + text_boxes_html + chests,
-    )
+html = game_def.level_renderer_optimized(
+    st.session_state["level"],
+    player + monsters + text_boxes_html + chests,
+    #boxes + voids + torches + 
+)
 
-    display_html = st.empty()
-    
+display_html = st.empty()
 
-    if not st.session_state["end"]:
-        if st.session_state["player"].alive:
-            display_html = st.markdown(html, unsafe_allow_html=True)
-        else:
-            display_html = st.markdown(
-                "💀 The monster was more powerful than expected, resulting in your defeat in battle. Your journey has come to an unexpected end. To continue playing, please restart the app.<br><br>",
-                unsafe_allow_html=True,
-            )
-            if st.button("restart"):
-                restart_game()
-    if st.session_state["end"] == True:
+
+if not st.session_state["end"]:
+    if st.session_state["player"].alive:
+        display_html = st.markdown(html, unsafe_allow_html=True)
+    else:
         display_html = st.markdown(
-            "Thank you for playing the demo of The Dungeon. More content coming soom!",
+            "💀 The monster was more powerful than expected, resulting in your defeat in battle. Your journey has come to an unexpected end. To continue playing, please restart the app.<br><br>",
             unsafe_allow_html=True,
         )
-        st.markdown(
-            f"""
-        <div><br>
-        <a href="https://www.buymeacoffee.com/tomjohn" style="color: grey; text-decoration:none;">
-        <div style="justify-content: center;margin:0px; border:solid 2px;background-color: #0e1117; ;border-radius:10px; border-color:#21212f; width: fit-content;padding:0.425rem">
-        <img src="https://raw.githubusercontent.com/TomJohnH/streamlit-game/main/images/coffe.png" style="max-width:20px;margin-right:10px;">
-        Buy me a coffee</a></div></div>""",
-            unsafe_allow_html=True,
-        )
-
-    st.button("L", on_click=left_callback, key="L")
-    st.button("R", on_click=right_callback, key="R")
-    st.button("U", on_click=up_callback, key="U")
-    st.button("D", on_click=down_callback, key="D")
-
-    # ------------------------------------------------------------
-    #
-    #                Game enigne - sidebar for backup input
-    #
-    # ------------------------------------------------------------
-
-    # ------------ sidebar for backup input ---------------------------
-
-    with st.sidebar:
-        st.write("Use keyboard arrows or buttons below")
-        st.markdown("<br>", unsafe_allow_html=True)
-        left_col, middle_col, right_col = st.columns([1, 1, 1])
-        with middle_col:
-            st.button("UP", on_click=up_callback, key="UP", use_container_width=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        left_col, middle_col, right_col = st.columns([1, 1, 1])
-        with left_col:
-            st.button(
-                "LEFT", on_click=left_callback, key="LEFT", use_container_width=True
-            )
-
-        with right_col:
-            st.button(
-                "RIGHT", on_click=right_callback, key="RIGHT", use_container_width=True
-            )
-        st.markdown("<br>", unsafe_allow_html=True)
-        left_col, middle_col, right_col = st.columns([1, 1, 1])
-        with middle_col:
-            st.button(
-                "DOWN", on_click=down_callback, key="DOWN", use_container_width=True
-            )
-        st.markdown("<br>", unsafe_allow_html=True)
-        dev_options = st.checkbox("Developer options")
-        god_mode = st.checkbox("God mode")
-        fly_mode = st.checkbox("Fly mode")
-        st.markdown(
-            "<br>Check the level editor<br> [The Dungeon Level Editor](https://dungeon-editor.streamlit.app/)",
-            unsafe_allow_html=True,
-        )
-
-    # ------------------------------------------------------------
-    #
-    #               Game enigne - console div
-    #
-    # ------------------------------------------------------------
-
+        if st.button("restart"):
+            restart_game()
+if st.session_state["end"] == True:
+    display_html = st.markdown(
+        "Thank you for playing the demo of The Dungeon. More content coming soom!",
+        unsafe_allow_html=True,
+    )
     st.markdown(
         f"""
-        <div class="bpad" id="bpad">HP: {st.session_state["player"].hp}/20 | Gold: {st.session_state["player"].gold} | Exp: 0 </div>""",
+    <div><br>
+    <a href="https://www.buymeacoffee.com/tomjohn" style="color: grey; text-decoration:none;">
+    <div style="justify-content: center;margin:0px; border:solid 2px;background-color: #0e1117; ;border-radius:10px; border-color:#21212f; width: fit-content;padding:0.425rem">
+    <img src="https://raw.githubusercontent.com/TomJohnH/streamlit-game/main/images/coffe.png" style="max-width:20px;margin-right:10px;">
+    Buy me a coffee</a></div></div>""",
         unsafe_allow_html=True,
     )
 
-    # ------------------------------------------------------------
-    #
-    #               Game enigne - JS trickery
-    #
-    # ------------------------------------------------------------
+st.button("L", on_click=left_callback, key="L")
+st.button("R", on_click=right_callback, key="R")
+st.button("U", on_click=up_callback, key="U")
+st.button("D", on_click=down_callback, key="D")
 
-    components.html(
-        game_js.js_script_highly_optimized ,
-        height=0,
-        width=0,
+# ------------------------------------------------------------
+#
+#                Game enigne - sidebar for backup input
+#
+# ------------------------------------------------------------
+
+# ------------ sidebar for backup input ---------------------------
+
+with st.sidebar:
+    st.write("Use keyboard arrows or buttons below")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    left_col, middle_col, right_col = st.columns([1, 1, 1])
+    with middle_col:
+        st.button(
+                "UP", on_click=up_callback, key="UP", use_container_width=True
+        )
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    left_col, middle_col, right_col = st.columns([1, 1, 1])
+    with left_col:
+        st.button(
+            "LEFT", on_click=left_callback, key="LEFT", use_container_width=True
+        )
+
+    with right_col:
+        st.button(
+            "RIGHT", on_click=right_callback, key="RIGHT", use_container_width=True
+        )
+    st.markdown("<br>", unsafe_allow_html=True)
+    left_col, middle_col, right_col = st.columns([1, 1, 1])
+    with middle_col:
+        st.button(
+            "DOWN", on_click=down_callback, key="DOWN", use_container_width=True
+        )
+    st.markdown("<br>", unsafe_allow_html=True)
+    # dev_options = st.checkbox("Developer options")
+    # god_mode = st.checkbox("God mode")
+    # fly_mode = st.checkbox("Fly mode")
+    st.markdown(
+        "<br>Check the level editor<br> [The Dungeon Level Editor](https://dungeon-editor.streamlit.app/)",
+        unsafe_allow_html=True,
     )
 
-if dev_options:
-    st.caption("Player x: " + str(st.session_state["player"].x))
-    st.caption("Player y: " + str(st.session_state["player"].y))
-if god_mode:
-    st.session_state["player"].hp = 999
-if fly_mode:
-    st.session_state["fly_mode"] = True
+# ------------------------------------------------------------
+#
+#               Game enigne - console div
+#
+# ------------------------------------------------------------
+
+st.markdown(
+    f"""
+    <div class="bpad" id="bpad">HP: {st.session_state["player"].hp}/20 | Gold: {st.session_state["player"].gold} | Exp: 0 </div>""",
+    unsafe_allow_html=True,
+)
+
+# ------------------------------------------------------------
+#
+#               Game enigne - JS trickery
+#
+# ------------------------------------------------------------
+
+components.html(
+    game_js.js_script_highly_optimized ,
+    height=0,
+    width=0,
+)
+
+# if dev_options:
+#     st.caption("Player x: " + str(st.session_state["player"].x))
+#     st.caption("Player y: " + str(st.session_state["player"].y))
+# if god_mode:
+#     st.session_state["player"].hp = 999
+# if fly_mode:
+#     st.session_state["fly_mode"] = True

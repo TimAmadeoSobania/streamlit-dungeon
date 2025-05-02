@@ -2,6 +2,7 @@ import game_config
 import streamlit as st
 from random import randrange
 import random
+import os
 
 
 # ------------------------------------------------------------
@@ -322,9 +323,12 @@ def level_renderer_optimized(df, game_objects):
     # Process all rows in one go
     for i, row in enumerate(df):
         for j, tile in enumerate(row):
+            print(os.getcwd())
             html_parts.append(
-                f'<img src="{tileset[tile]}" style="grid-column-start: {j+1}; grid-row-start: {i+1};">'
+                #f'<img src="{tileset[tile]}" style="grid-column-start: {j+1}; grid-row-start: {i+1};">'
+                f'<img src="{f'/graphics/splitted_images/{tileset[str(tile)]}'}" style="grid-column-start: {j+1}; grid-row-start: {i+1};">'
             )
+    #html_parts.append(str(st.image("graphics/bar_mock_layout.png")))
     
     # Add game objects and close tags
     html_parts.append(game_objects)
