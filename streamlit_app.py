@@ -232,15 +232,31 @@ def down_callback():
 
 @st.cache_data
 def fetch_data(level_name):
+    layer_data = []
     if 'csv' in level_name:
-        df = pd.read_csv(level_name, sep=",", header=None)
+        layer_data.append(pd.read_csv(level_name, sep=",", header=None).values)
     elif 'json' in level_name:
-        width = pd.read_json(f"graphics/{level_name}").layers[0]['chunks'][0]['width']
-        data = pd.read_json(f"graphics/{level_name}").layers[0]['chunks'][0]['data']
-        df = pd.DataFrame([data[x:x+width] for x in range(0, len(data), width)])
+        with open(f"graphics/{level_name}") as json_data:
+            data = json.load(json_data)
+        for layer in data['layers']:
+            layer_width = layer['width']
+            layer_height = layer['height']
+            chunks = layer['chunks']
+            df = pd.DataFrame(index=range(layer_height), columns=range(layer_width))
+            for chunk in chunks:
+                chunk_width = chunk['width']
+                chunk_height = chunk['height']
+                data = chunk['data']
+                x_offset = chunk['x']
+                y_offset = chunk['y']
+
+                for i in range(chunk_height):
+                    for j in range(chunk_width):
+                        df.iloc[y_offset+i, x_offset+j] = data[i*chunk_width+j]
+            layer_data.append(df.values)
     else:
         raise ValueError("Unsupported file format when loading map. Please provide a CSV or JSON file.")
-    return df
+    return layer_data
 
 # ---------------- game restart ----------------
 
@@ -388,9 +404,9 @@ text_boxes_html = game_def.get_text_boxes(
 # ------------------------------------------------------------
 
 # fetch level with certain number
-df = fetch_data(st.session_state.level_data[current_level_name]["level_csv"])
+layer_data = fetch_data(st.session_state.level_data[current_level_name]["level_csv"])
 if "level" not in st.session_state:  # or st.session_state["level_change"]:
-    st.session_state["level"] = df.values
+    st.session_state["level"] = layer_data
     
 
 
@@ -550,11 +566,11 @@ with st.sidebar:
 #
 # ------------------------------------------------------------
 
-st.markdown(
-    f"""
-    <div class="bpad" id="bpad">HP: {st.session_state["player"].hp}/20 | Gold: {st.session_state["player"].gold} | Exp: 0 </div>""",
-    unsafe_allow_html=True,
-)
+# st.markdown(
+#     f"""
+#     <div class="bpad" id="bpad">HP: {st.session_state["player"].hp}/20 | Gold: {st.session_state["player"].gold} | Exp: 0 </div>""",
+#     unsafe_allow_html=True,
+# )
 
 # ------------------------------------------------------------
 #

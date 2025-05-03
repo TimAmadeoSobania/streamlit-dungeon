@@ -25,8 +25,15 @@ def character_can_move(level_matrix, tileset_movable, x, y):
     Returns:
         bool: True if the character can move to the desired position, False otherwise.
     """
-
-    is_movable = tileset_movable[level_matrix[x - 1, y - 1]]
+    is_movable = True
+    for layer in level_matrix:
+        print(f"x: {x}, y: {y}")
+        if x < 1 or y < 1 or x > layer.shape[0] or y > layer.shape[1]:
+            is_movable = False
+            break
+        if not tileset_movable[str(layer[x - 1, y - 1])]:
+            is_movable = False
+            break
     return is_movable or st.session_state["fly_mode"]
 
 
@@ -306,7 +313,7 @@ def level_renderer(df, game_objects):
     level_html = f'<div class="container"><div class="gamegrid">{" ".join(level_rows)}{game_objects}</div></div>'
     return level_html
 
-def level_renderer_optimized(df, game_objects):
+def level_renderer_optimized(layer_data, game_objects):
     """
     Optimized version of the level renderer function.
     Uses string concatenation instead of creating lists and joining them later.
@@ -318,16 +325,16 @@ def level_renderer_optimized(df, game_objects):
     html_parts = ['<div class="container"><div class="gamegrid">']
     
     # Pre-fetch tileset for faster lookups
-    tileset = game_config.tileset
-    
+    tileset = game_config.tileset 
+
     # Process all rows in one go
-    for i, row in enumerate(df):
-        for j, tile in enumerate(row):
-            print(os.getcwd())
-            html_parts.append(
-                #f'<img src="{tileset[tile]}" style="grid-column-start: {j+1}; grid-row-start: {i+1};">'
-                f'<img src="{f'/graphics/splitted_images/{tileset[str(tile)]}'}" style="grid-column-start: {j+1}; grid-row-start: {i+1};">'
-            )
+    for layer in layer_data:
+        for i, row in enumerate(layer):
+            for j, tile in enumerate(row):
+                html_parts.append(
+                    #f'<img src="{tileset[tile]}" style="grid-column-start: {j+1}; grid-row-start: {i+1};">'
+                    f'<img src="https://raw.githubusercontent.com/TimAmadeoSobania/streamlit-dungeon/main/graphics/splitted_images/{tileset[str(tile)]}" style="grid-column-start: {j+1}; grid-row-start: {i+1}">'
+                ) if tile != 0 else ""
     #html_parts.append(str(st.image("graphics/bar_mock_layout.png")))
     
     # Add game objects and close tags
