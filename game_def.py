@@ -27,7 +27,6 @@ def character_can_move(level_matrix, tileset_movable, x, y):
     """
     is_movable = True
     for layer in level_matrix:
-        print(f"x: {x}, y: {y}")
         if x < 1 or y < 1 or x > layer.shape[0] or y > layer.shape[1]:
             is_movable = False
             break

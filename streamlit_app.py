@@ -511,10 +511,10 @@ if st.session_state["end"] == True:
         unsafe_allow_html=True,
     )
 
-st.button("L", on_click=left_callback, key="L")
-st.button("R", on_click=right_callback, key="R")
-st.button("U", on_click=up_callback, key="U")
-st.button("D", on_click=down_callback, key="D")
+st.button("←", on_click=left_callback, key="L")
+st.button("→", on_click=right_callback, key="R")
+st.button("↑", on_click=up_callback, key="U")
+st.button("↓", on_click=down_callback, key="D")
 
 # ------------------------------------------------------------
 #
@@ -531,25 +531,25 @@ with st.sidebar:
     left_col, middle_col, right_col = st.columns([1, 1, 1])
     with middle_col:
         st.button(
-                "UP", on_click=up_callback, key="UP", use_container_width=True
+                "↑", on_click=up_callback, key="UP", use_container_width=True
         )
     st.markdown("<br>", unsafe_allow_html=True)
 
     left_col, middle_col, right_col = st.columns([1, 1, 1])
     with left_col:
         st.button(
-            "LEFT", on_click=left_callback, key="LEFT", use_container_width=True
+            "←", on_click=left_callback, key="LEFT", use_container_width=True
         )
 
     with right_col:
         st.button(
-            "RIGHT", on_click=right_callback, key="RIGHT", use_container_width=True
+            "→", on_click=right_callback, key="RIGHT", use_container_width=True
         )
     st.markdown("<br>", unsafe_allow_html=True)
     left_col, middle_col, right_col = st.columns([1, 1, 1])
     with middle_col:
         st.button(
-            "DOWN", on_click=down_callback, key="DOWN", use_container_width=True
+            "↓", on_click=down_callback, key="DOWN", use_container_width=True
         )
     st.markdown("<br>", unsafe_allow_html=True)
     # dev_options = st.checkbox("Developer options")
