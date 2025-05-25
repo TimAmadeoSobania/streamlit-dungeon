@@ -241,18 +241,24 @@ def fetch_data(level_name):
         for layer in data['layers']:
             layer_width = layer['width']
             layer_height = layer['height']
-            chunks = layer['chunks']
             df = pd.DataFrame(index=range(layer_height), columns=range(layer_width))
-            for chunk in chunks:
-                chunk_width = chunk['width']
-                chunk_height = chunk['height']
-                data = chunk['data']
-                x_offset = chunk['x']
-                y_offset = chunk['y']
+            if 'chunks' in layer.keys():
+                chunks = layer['chunks']
+                for chunk in chunks:
+                    chunk_width = chunk['width']
+                    chunk_height = chunk['height']
+                    data = chunk['data']
+                    x_offset = chunk['x']
+                    y_offset = chunk['y']
 
-                for i in range(chunk_height):
-                    for j in range(chunk_width):
-                        df.iloc[y_offset+i, x_offset+j] = data[i*chunk_width+j]
+                    for i in range(chunk_height):
+                        for j in range(chunk_width):
+                            df.iloc[y_offset+i, x_offset+j] = data[i*chunk_width+j]
+            else:
+                data = layer['data']
+                for i in range(layer_height):
+                    for j in range(layer_width):
+                        df.iloc[i, j] = data[i*layer_width+j]
             layer_data.append(df.values)
     else:
         raise ValueError("Unsupported file format when loading map. Please provide a CSV or JSON file.")

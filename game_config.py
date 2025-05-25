@@ -97,7 +97,7 @@ level_config = """
         }
     },
     "level3": {
-        "level_csv": "testmap.json",
+        "level_csv": "verl.json",
         "player_xy": {
             "x":4,
             "y":5

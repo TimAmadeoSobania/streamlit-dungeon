@@ -30,8 +30,12 @@ def character_can_move(level_matrix, tileset_movable, x, y):
         if x < 1 or y < 1 or x > layer.shape[0] or y > layer.shape[1]:
             is_movable = False
             break
-        if not tileset_movable[str(layer[x - 1, y - 1])]:
-            is_movable = False
+        try:
+            if not tileset_movable[str(get_tile_id(layer[x - 1, y - 1]))]:
+                is_movable = False
+                break
+        except KeyError:
+            is_movable = True
             break
     return is_movable or st.session_state["fly_mode"]
 
@@ -291,6 +295,52 @@ def treasures(player, treasure):
 #                RENDERING FUNCTIONS
 #
 # ------------------------------------------------------------
+def get_tile_id(tile_id:int) -> int:
+    if tile_id < 0:
+        return tile_id
+    return tile_id & 0b00001111111111111111111111111111
+
+# There is no spin. It can be expressed as a combination of horizontal, vertical, diagonal flips.
+def is_hoz_flip(tile_id:int) -> bool:
+    return ((tile_id & 0b10000000000000000000000000000000) != 0) and (tile_id >= 0)
+
+def is_ver_flip(tile_id:int) -> bool:
+    return ((tile_id & 0b01000000000000000000000000000000) != 0) and (tile_id >= 0)
+
+def is_dia_flip(tile_id:int) -> bool:
+    return ((tile_id & 0b00100000000000000000000000000000) != 0) and (tile_id >= 0)
+
+def is_hex_120_deg_flipped(tile_id:int) -> bool:
+    return ((tile_id & 0b00010000000000000000000000000000) != 0) and (tile_id >= 0)
+
+def prepare_tile_html(tile_id:int, col:int, row:int) -> str:
+    """
+    Prepare the HTML for a tile based on its ID and position.
+
+    Args:
+        tile_id (int): The ID of the tile.
+        col (int): The column position of the tile.
+        row (int): The row position of the tile.
+
+    Returns:
+        str: The HTML string for the tile.
+    """
+    try:
+        src = game_config.tileset[str(get_tile_id(tile_id))]
+    except KeyError:
+        return ""
+    
+    # Prepare style attributes for flipping
+    transformations = {'horizontal flip': 1, 'vertical flip': 1, 'rotation': 0} 
+    if is_dia_flip(tile_id):
+        transformations['horizontal flip'] *= -1
+        transformations['rotation'] = 90
+    if is_hoz_flip(tile_id):
+        transformations["horizontal flip"] *= -1
+    if is_ver_flip(tile_id):
+        transformations["vertical flip"] *= -1
+    
+    return f'<img src="https://raw.githubusercontent.com/TimAmadeoSobania/streamlit-dungeon/main/graphics/splitted_images/{src}" style="grid-column-start: {col}; grid-row-start: {row}; transform: scaleX({transformations["horizontal flip"]}) scaleY({transformations["vertical flip"]}) rotate({transformations["rotation"]}deg);">'
 
 def level_renderer(df, game_objects):
     """
@@ -331,8 +381,8 @@ def level_renderer_optimized(layer_data, game_objects):
         for i, row in enumerate(layer):
             for j, tile in enumerate(row):
                 html_parts.append(
-                    #f'<img src="{tileset[tile]}" style="grid-column-start: {j+1}; grid-row-start: {i+1};">'
-                    f'<img src="https://raw.githubusercontent.com/TimAmadeoSobania/streamlit-dungeon/main/graphics/splitted_images/{tileset[str(tile)]}" style="grid-column-start: {j+1}; grid-row-start: {i+1}">'
+                    prepare_tile_html(tile, j + 1, i + 1)
+                    #f'<img src="https://raw.githubusercontent.com/TimAmadeoSobania/streamlit-dungeon/main/graphics/splitted_images/{tileset[str(tile)]}" style="grid-column-start: {j+1}; grid-row-start: {i+1}">'
                 ) if tile != 0 else ""
     #html_parts.append(str(st.image("graphics/bar_mock_layout.png")))
     
