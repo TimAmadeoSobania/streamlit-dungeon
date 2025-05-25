@@ -517,10 +517,10 @@ if st.session_state["end"] == True:
         unsafe_allow_html=True,
     )
 
-st.button("←", on_click=left_callback, key="L")
-st.button("→", on_click=right_callback, key="R")
-st.button("↑", on_click=up_callback, key="U")
-st.button("↓", on_click=down_callback, key="D")
+st.button("L", on_click=left_callback, key="←")
+st.button("R", on_click=right_callback, key="R")
+st.button("U", on_click=up_callback, key="U")
+st.button("D", on_click=down_callback, key="D")
 
 # ------------------------------------------------------------
 #
